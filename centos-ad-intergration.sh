@@ -23,7 +23,7 @@ sudo rm -rf /etc/krb5.keytab || { echo "Failed to remove krb5 keytab"; exit 1; }
 sudo yum install ntp ntpdate sssd realmd oddjob oddjob-mkhomedir adcli samba-common samba-common-tools krb5-workstation openldap-clients policycoreutils-python -y || { echo "Failed to install packages"; exit 1; }
 
 ## Join Realm
-/usr/sbin/realm join --user="$svc_usr" --password="$svc_usr_password" "$new_ad_domain" -v --computer-ou="${ad_ou}" || { echo "Failed to join realm"; exit 1; }
+/usr/sbin/realm join --user="$svc_usr" --password="$svc_usr_password" "$(echo "$new_ad_domain" | tr '[:lower:]' '[:upper:]')" -v --computer-ou="${ad_ou}" || { echo "Failed to join realm"; exit 1; }
 
 ##Update sssd configuration
 sudo tee /etc/sssd/sssd.conf > /dev/null <<EOF
@@ -38,13 +38,12 @@ enum_cache_timeout = 10
 override_shell = /bin/bash
 override_homedir = /home/%u
 
-[domain/$new_ad_domain]
+[domain/$(echo "$new_ad_domain" | tr '[:lower:]' '[:upper:]')]
 ad_server = $ad_server_hstname
-ad_domain = $new_ad_domain
-krb4_realm = $new_ad_domain
+ad_domain = $(echo "$new_ad_domain" | tr '[:lower:]' '[:upper:]')
+krb4_realm = $(echo "$new_ad_domain" | tr '[:lower:]' '[:upper:]')
 debug_level = 1  # Lower debug level for production
 realm_tags = manages-system joined-with-samba
-cache_credentials = False
 id_provider = ad
 krb5_store_password_if_offline = True
 default_shell = /bin/bash
